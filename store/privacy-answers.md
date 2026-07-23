@@ -1,6 +1,6 @@
 # Chrome Web Store privacy answers
 
-These answers describe Qrive version 0.1.0. Recheck them against the current
+These answers describe Qrive version 0.1.1. Recheck them against the current
 code and dashboard wording before every submission.
 
 ## Single purpose

@@ -167,6 +167,47 @@ export const popoverStyles = `
     padding: 8px 12px;
   }
 
+  .copy-action {
+    overflow: hidden;
+    position: relative;
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .copy-action::before {
+    content: "";
+    display: inline-grid;
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 800;
+    opacity: 0;
+    overflow: hidden;
+    place-items: center;
+    transform: scale(0.35) rotate(-20deg);
+    transition:
+      opacity 160ms ease,
+      transform 240ms cubic-bezier(0.2, 0.9, 0.3, 1.35),
+      width 200ms ease;
+    width: 0;
+  }
+
+  .copy-action.copied {
+    animation: qrive-copy-confirm 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    background: #e6f4ea;
+    border-color: #34a853;
+    color: #137333;
+  }
+
+  .copy-action.copied::before {
+    content: "✓";
+    opacity: 1;
+    transform: scale(1) rotate(0);
+    width: 18px;
+  }
+
   .action.primary {
     background: var(--qrive-blue);
     border-color: var(--qrive-blue);
@@ -211,5 +252,32 @@ export const popoverStyles = `
 
   [hidden] {
     display: none !important;
+  }
+
+  @keyframes qrive-copy-confirm {
+    0% {
+      transform: scale(0.96);
+    }
+
+    55% {
+      box-shadow: 0 4px 12px rgba(24, 128, 56, 0.2);
+      transform: scale(1.04);
+    }
+
+    100% {
+      box-shadow: none;
+      transform: scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .copy-action,
+    .copy-action::before {
+      transition: none;
+    }
+
+    .copy-action.copied {
+      animation: none;
+    }
   }
 `;

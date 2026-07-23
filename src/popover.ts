@@ -64,6 +64,7 @@ export class QrivePopover {
   private readonly host: HTMLDivElement;
   private readonly shadow: ShadowRoot;
   private readonly messages: Messages;
+  private readonly copyResetTimers = new WeakMap<HTMLButtonElement, number>();
   private activeAnchor: HTMLElement | null = null;
   private popover: HTMLDivElement | null = null;
 
@@ -126,7 +127,7 @@ export class QrivePopover {
       popover.append(frame);
 
       const actions = createElement("div", "actions");
-      const copyButton = createElement("button", "action");
+      const copyButton = createElement("button", "action copy-action");
       copyButton.type = "button";
       copyButton.textContent = this.messages.copy;
       copyButton.addEventListener("click", () => {
@@ -304,14 +305,24 @@ export class QrivePopover {
   ): Promise<void> {
     try {
       await copyText(url);
-      const originalText = button.textContent;
+      const currentTimer = this.copyResetTimers.get(button);
+      if (currentTimer !== undefined) {
+        window.clearTimeout(currentTimer);
+      }
+      button.classList.remove("copied");
+      // Restart the confirmation animation when users copy repeatedly.
+      void button.offsetWidth;
+      button.classList.add("copied");
       button.textContent = this.messages.copied;
       status.textContent = this.messages.copied;
-      window.setTimeout(() => {
+      const resetTimer = window.setTimeout(() => {
         if (button.isConnected) {
-          button.textContent = originalText;
+          button.classList.remove("copied");
+          button.textContent = this.messages.copy;
         }
+        this.copyResetTimers.delete(button);
       }, 1500);
+      this.copyResetTimers.set(button, resetTimer);
     } catch {
       status.textContent = this.messages.copyFailed;
     }

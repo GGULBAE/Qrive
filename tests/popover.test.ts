@@ -1,12 +1,28 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RowContext } from "../src/drive-dom";
 import { QrivePopover } from "../src/popover";
+
+vi.mock("qrcode", () => ({
+  default: {
+    toCanvas: vi.fn().mockResolvedValue(undefined),
+  },
+}));
 
 const untrustedContext: RowContext = {
   fileName: "계획서.pdf",
   link: null,
   signature: "계획서.pdf\u0000untrusted",
+};
+
+const trustedContext: RowContext = {
+  fileName: "plan.pdf",
+  link: {
+    source: "href",
+    url: "https://drive.google.com/file/d/1TrustedDriveItem/view",
+  },
+  signature:
+    "plan.pdf\u0000https://drive.google.com/file/d/1TrustedDriveItem/view",
 };
 
 const popovers: QrivePopover[] = [];
@@ -16,6 +32,10 @@ afterEach(() => {
     popover.destroy();
   }
   document.body.innerHTML = "";
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: undefined,
+  });
 });
 
 describe("QrivePopover accessibility", () => {
@@ -78,5 +98,34 @@ describe("QrivePopover accessibility", () => {
       "[data-qrive-popover-host]",
     );
     expect(host?.shadowRoot?.querySelector("[role='dialog']")).toBeNull();
+  });
+
+  it("animates a clear confirmation after copying a trusted link", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    const popover = new QrivePopover("en");
+    popovers.push(popover);
+    await popover.open({ anchor, context: trustedContext });
+
+    const host = document.querySelector<HTMLElement>(
+      "[data-qrive-popover-host]",
+    );
+    const copyButton =
+      host?.shadowRoot?.querySelector<HTMLButtonElement>(".copy-action");
+    copyButton?.click();
+
+    await vi.waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(trustedContext.link?.url);
+      expect(copyButton?.textContent).toBe("Copied");
+      expect(copyButton?.classList.contains("copied")).toBe(true);
+    });
+    expect(
+      host?.shadowRoot?.querySelector("[role='status']")?.textContent,
+    ).toBe("Copied");
   });
 });
