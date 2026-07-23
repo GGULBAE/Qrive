@@ -24,21 +24,20 @@ bundled in the submitted extension package.
 ## Data types handled
 
 The Chrome Web Store policy treats local page processing as data handling.
-Disclose the following categories conservatively in the dashboard:
+Disclose the following category in the dashboard:
 
 - **Website content:** displayed Drive file or folder names, sharing
   indicators, links, and stable item identifiers needed for the QR action.
-- **Web history / browsing activity:** only the current Google Drive item URL
-  selected for QR generation. Qrive does not read browser history or activity
-  on other sites.
 
 Do not select personally identifiable information, health information,
 financial and payment information, authentication information, personal
-communications, location, or user activity: Qrive does not handle those data
-types. Qrive also does not read the contents of Drive files.
+communications, location, web history, or user activity: Qrive does not handle
+those data types. The current Drive item URL is a hyperlink in the visible
+page, so it is disclosed as website content rather than web history. Qrive
+does not read browser history or the contents of Drive files.
 
-If the live dashboard defines a category differently, follow the displayed
-definition and keep the result consistent with `PRIVACY.md`.
+Keep every disclosure consistent with the live dashboard definitions,
+`PRIVACY.md`, and the submitted extension behavior.
 
 ## Data-use certifications
 

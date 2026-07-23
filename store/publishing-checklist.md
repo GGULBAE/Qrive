@@ -26,7 +26,7 @@
 - [ ] Use `listing-en.md` for the default English listing.
 - [ ] Add the Korean localization from `listing-ko.md`.
 - [ ] Select the Productivity category.
-- [ ] Upload `assets/icons/icon-128.png` as the store icon.
+- [ ] Upload `store/assets/icon-128.png` as the store icon.
 - [ ] Upload the 1280×800 screenshots from `store/assets/`.
 - [ ] Upload `store/assets/small-promo-440x280.png`.
 - [ ] Upload `store/assets/marquee-1400x560.png` if the field is available.

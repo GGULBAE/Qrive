@@ -323,6 +323,7 @@ function marquee() {
 }
 
 const assets = [
+  ["icon-128.png", iconSvg],
   ["screenshot-1-qr-popover-1280x800.png", screenshotOne()],
   ["screenshot-2-shared-items-1280x800.png", screenshotTwo()],
   ["screenshot-3-trusted-links-1280x800.png", screenshotThree()],
@@ -332,6 +333,10 @@ const assets = [
 
 await mkdir(outputDirectory, { recursive: true });
 for (const [fileName, svg] of assets) {
-  await sharp(Buffer.from(svg)).png().toFile(path.join(outputDirectory, fileName));
+  await sharp(Buffer.from(svg))
+    .flatten({ background: "#ffffff" })
+    .removeAlpha()
+    .png()
+    .toFile(path.join(outputDirectory, fileName));
   console.log(`Created store/assets/${fileName}.`);
 }
