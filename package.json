@@ -20,6 +20,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "lint": "eslint .",
     "package": "pnpm build && node scripts/package.mjs",
+    "store-assets": "node scripts/generate-store-assets.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

@@ -1,5 +1,8 @@
 # Qrive — QR Links for Google Drive
 
+[![CI](https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml/badge.svg)](https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Qrive is an open-source Chrome extension that adds a QR button beside the
 existing shared indicator in Google Drive list rows. It creates the QR code
 locally and never changes the item's sharing settings.
@@ -68,6 +71,7 @@ pnpm lint
 pnpm test
 pnpm build        # create the unpacked extension in dist/
 pnpm package      # create artifacts/qrive-v<version>.zip
+pnpm store-assets # regenerate Chrome Web Store screenshots and promo images
 ```
 
 The `dev` command watches TypeScript. Reload the extension from
@@ -134,19 +138,33 @@ or create the requested PNG. Qrive has no network client, storage, telemetry,
 advertising, OAuth flow, or backend. Google Drive itself continues to receive
 normal browser requests when a user opens Drive or follows a link.
 
+See the full [Privacy Policy](PRIVACY.md) for the data categories handled
+locally, retention, sharing, site access, and Chrome Web Store Limited Use
+statement.
+
+## Contributing and security
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md) before opening a pull request. Report
+vulnerabilities privately according to [SECURITY.md](SECURITY.md); never post
+real Drive links, item IDs, file names, or account data in a public issue.
+
 ## Release and Chrome Web Store deployment
 
 1. Update the version in `package.json` and `manifest.json`.
 2. Run `corepack install` and `pnpm install --frozen-lockfile`.
 3. Run `pnpm check`.
-4. Run `pnpm package`.
+4. Run `pnpm store-assets` and `pnpm package`.
 5. Inspect the generated ZIP and load its uncompressed contents in a clean
    Chrome profile.
 6. Upload the ZIP in the Chrome Web Store developer dashboard.
-7. Complete the store listing and privacy disclosures using the permission and
-   privacy statements above, then submit for review.
+7. Complete the listing and privacy fields from the version-controlled
+   [store submission kit](store/README.md), then submit for review.
 
 No publishing credential belongs in this repository.
+
+Qrive is an independent open-source project and is not affiliated with,
+endorsed by, or sponsored by Google. Google Drive is a trademark of Google LLC.
 
 ## License
 
