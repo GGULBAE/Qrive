@@ -1,0 +1,45 @@
+{
+  "name": "qrive",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Qrive — QR Links for Google Drive",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GGULBAE/Qrive.git"
+  },
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "dev": "node scripts/build.mjs --watch",
+    "icons": "node scripts/generate-icons.mjs",
+    "lint": "eslint .",
+    "package": "pnpm build && node scripts/package.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.32.0",
+    "@types/archiver": "6.0.3",
+    "@types/node": "24.1.0",
+    "@types/qrcode": "1.5.5",
+    "archiver": "7.0.1",
+    "esbuild": "0.25.8",
+    "eslint": "9.32.0",
+    "globals": "16.3.0",
+    "jsdom": "26.1.0",
+    "sharp": "0.35.3",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.38.0",
+    "vitest": "3.2.6"
+  }
+}

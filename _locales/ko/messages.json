@@ -1,0 +1,8 @@
+{
+  "extensionName": {
+    "message": "Qrive — Google Drive QR 링크"
+  },
+  "extensionDescription": {
+    "message": "Google Drive에서 이미 공유된 항목의 QR 코드를 기기 안에서 생성합니다."
+  }
+}
