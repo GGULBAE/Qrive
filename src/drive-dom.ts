@@ -249,11 +249,3 @@ export function findDriveRows(root: ParentNode): HTMLElement[] {
   root.querySelectorAll<HTMLElement>(ROW_SELECTOR).forEach((row) => rows.add(row));
   return [...rows];
 }
-
-export function getIndicatorInsertionTarget(indicator: HTMLElement): HTMLElement {
-  return (
-    indicator.closest<HTMLElement>(
-      "[aria-label], [data-tooltip], [data-tooltip-text], [title]",
-    ) ?? indicator
-  );
-}

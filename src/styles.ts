@@ -2,8 +2,14 @@ export const buttonStyles = `
   :host {
     display: inline-flex;
     align-items: center;
-    margin-inline-start: 4px;
-    vertical-align: middle;
+    height: 28px;
+    position: fixed;
+    width: 28px;
+    z-index: 2147483646;
+  }
+
+  :host([hidden]) {
+    display: none !important;
   }
 
   button {

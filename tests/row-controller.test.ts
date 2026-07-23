@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QRIVE_HOST_ATTRIBUTE } from "../src/drive-dom";
 import {
@@ -9,8 +9,11 @@ import {
 function makeController() {
   const open = vi.fn<PopoverAdapter["open"]>();
   const controller = new DriveRowController("en", { open });
+  controllers.push(controller);
   return { controller, open };
 }
+
+const controllers: DriveRowController[] = [];
 
 function renderSharedRow(): HTMLElement {
   document.body.innerHTML = `
@@ -34,7 +37,8 @@ function renderSharedRow(): HTMLElement {
 }
 
 function getButton(row: HTMLElement): HTMLButtonElement {
-  const host = row.querySelector<HTMLElement>(`[${QRIVE_HOST_ATTRIBUTE}]`);
+  expect(row.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBeNull();
+  const host = document.querySelector<HTMLElement>(`[${QRIVE_HOST_ATTRIBUTE}]`);
   const button = host?.shadowRoot?.querySelector<HTMLButtonElement>("button");
   if (!button) {
     throw new Error("Expected Qrive button");
@@ -48,6 +52,12 @@ describe("DriveRowController", () => {
     document.body.innerHTML = "";
   });
 
+  afterEach(() => {
+    for (const controller of controllers.splice(0)) {
+      controller.destroy();
+    }
+  });
+
   it("inserts exactly one button beside a shared indicator", () => {
     const row = renderSharedRow();
     const { controller } = makeController();
@@ -57,7 +67,7 @@ describe("DriveRowController", () => {
     controller.processRow(row);
 
     expect(
-      row.querySelectorAll(`[${QRIVE_HOST_ATTRIBUTE}]`),
+      document.querySelectorAll(`[${QRIVE_HOST_ATTRIBUTE}]`),
     ).toHaveLength(1);
     expect(getButton(row).getAttribute("aria-label")).toBe(
       "Create a QR code for Alpha.pdf",
@@ -102,7 +112,7 @@ describe("DriveRowController", () => {
 
     controller.processRow(row);
 
-    expect(row.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBeNull();
+    expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBeNull();
   });
 
   it("keeps a button but passes a null link when extraction is untrusted", () => {
@@ -117,5 +127,72 @@ describe("DriveRowController", () => {
     getButton(row).click();
 
     expect(open.mock.calls[0]?.[0].context.link).toBeNull();
+  });
+
+  it("keeps the same overlay button when Drive replaces the row contents", () => {
+    const row = renderSharedRow();
+    const { controller } = makeController();
+    controller.processRow(row);
+    const originalHost = document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`);
+
+    row.innerHTML = `
+      <div role="gridcell">
+        <a data-qrive-name="Gamma.pdf"
+           href="https://drive.google.com/file/d/7GhIjKlMnOpQrStUv/view">
+          Gamma.pdf
+        </a>
+        <span aria-label="Shared"></span>
+      </div>
+    `;
+    controller.processRow(row);
+
+    expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBe(
+      originalHost,
+    );
+    expect(getButton(row).getAttribute("aria-label")).toBe(
+      "Create a QR code for Gamma.pdf",
+    );
+  });
+
+  it("positions the overlay beside the shared indicator", () => {
+    const row = renderSharedRow();
+    const indicator = row.querySelector<HTMLElement>("[aria-label='Shared']");
+    if (!indicator) {
+      throw new Error("Expected a shared indicator");
+    }
+    indicator.getBoundingClientRect = () =>
+      ({
+        bottom: 120,
+        height: 20,
+        left: 100,
+        right: 120,
+        top: 100,
+        width: 20,
+        x: 100,
+        y: 100,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    row.getBoundingClientRect = () =>
+      ({
+        bottom: 140,
+        height: 40,
+        left: 0,
+        right: 800,
+        top: 100,
+        width: 800,
+        x: 0,
+        y: 100,
+        toJSON: () => ({}),
+      }) as DOMRect;
+
+    const { controller } = makeController();
+    controller.processRow(row);
+
+    const host = document.querySelector<HTMLElement>(
+      `[${QRIVE_HOST_ATTRIBUTE}]`,
+    );
+    expect(host?.hidden).toBe(false);
+    expect(host?.style.left).toBe("124px");
+    expect(host?.style.top).toBe("96px");
   });
 });
