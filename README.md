@@ -3,6 +3,8 @@
 [![CI](https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml/badge.svg)](https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+[Install Qrive from the Chrome Web Store](https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm)
+
 Qrive is an open-source Chrome extension that adds a QR button beside the
 existing shared indicator in Google Drive list rows. It creates the QR code
 locally and never changes the item's sharing settings.
@@ -24,6 +26,14 @@ locally and never changes the item's sharing settings.
 
 Qrive does not use OAuth, a backend, analytics, remote QR services, or remote
 code.
+
+## Install from the Chrome Web Store
+
+Install [Qrive — QR Links for Google Drive][chrome-web-store] from the Chrome
+Web Store, then open or reload Google Drive. Qrive appears only beside items
+that Google Drive already marks as shared.
+
+[chrome-web-store]: https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm
 
 ## Trust and permission model
 

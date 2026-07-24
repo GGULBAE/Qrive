@@ -3,15 +3,19 @@
 ## Qrive 0.1.1
 
 - Submitted: July 23, 2026
+- Published: July 24, 2026
 - Item ID: `onpipenoogdnnebljkmengnkgilljelm`
 - Publisher: `GGULBAE`
 - Status at submission: Pending review
+- Current status: Published
 - Publishing: Automatically publish after review approval
 - Payment model: Free, with no in-app purchases
 - Visibility: Public
 - Regions: All regions
 - Category: Tools
 - Languages: English (default) and Korean
+- Public listing:
+  https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm
 - Package: `artifacts/qrive-v0.1.1.zip`
 - Package SHA-256:
   `0FBB74F87B574005EE70247216D4C5F8FA81394DA64F2A9D1EE643650EC5EF10`
