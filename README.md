@@ -1,41 +1,87 @@
-# Qrive — QR Links for Google Drive
+<div align="center">
+  <img src="store/assets/icon-128.png" width="96" height="96" alt="Qrive app icon">
+  <h1>Qrive</h1>
+  <p><strong>QR Links for Google Drive</strong></p>
+  <p>Turn a Drive item that is already shared into a scannable QR code — in one click.</p>
+  <p>
+    <a href="https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm">
+      <img src="https://img.shields.io/badge/Add%20to%20Chrome-1A73E8?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Add Qrive to Chrome">
+    </a>
+  </p>
+  <p>
+    <a href="#see-it-in-action">See it in action</a>
+    ·
+    <a href="#privacy-and-trust">Privacy &amp; trust</a>
+    ·
+    <a href="#development-setup">Build it yourself</a>
+  </p>
+  <p>
+    <a href="https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml"><img src="https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+    <a href="https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm"><img src="https://img.shields.io/chrome-web-store/v/onpipenoogdnnebljkmengnkgilljelm?label=Chrome%20Web%20Store&logo=googlechrome" alt="Chrome Web Store version"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
+    <img src="https://img.shields.io/badge/Manifest-V3-4285F4" alt="Manifest V3">
+  </p>
+</div>
 
-[![CI](https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml/badge.svg)](https://github.com/GGULBAE/Qrive/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm">
+    <img src="store/assets/marquee-1400x560.png" width="100%" alt="Qrive turns shared Google Drive links into locally generated QR codes">
+  </a>
+</p>
 
-[Install Qrive from the Chrome Web Store](https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm)
+## A faster path from Drive to QR
 
-Qrive is an open-source Chrome extension that adds a QR button beside the
-existing shared indicator in Google Drive list rows. It creates the QR code
-locally and never changes the item's sharing settings.
+Qrive adds a small QR action beside Google Drive's existing shared indicator.
+Click it to get the item's QR code, copy its link, or save a PNG — without
+opening a sharing dialog or changing who can access the item.
 
-## What the MVP does
+| One click from Drive | Local by design | Permissions stay in control |
+| :---: | :---: | :---: |
+| The QR action appears beside items Drive already marks as shared. | QR generation happens entirely in your browser. No OAuth, backend, analytics, or remote QR service. | Qrive never makes an item public and never edits its existing Google Drive sharing settings. |
 
-- Detects file and folder rows that Google Drive already marks as shared.
-- Inserts one QR button beside the existing shared indicator.
-- Shows a Shadow DOM-isolated popover with the item name, QR code, link copy,
-  PNG download, and a reminder that existing Google Drive permissions still
-  apply.
-- Supports Korean and English labels, native button keyboard activation,
-  focus return, focus containment, Escape, and outside-click dismissal.
-- Rescans Google Drive's single-page application with `MutationObserver`.
-  Repeated scans are idempotent, and a virtualized row's name and URL are read
-  again before the popover opens.
-- Refuses to render a QR code when the row does not expose a trusted link or a
-  stable Drive item ID.
+## See it in action
 
-Qrive does not use OAuth, a backend, analytics, remote QR services, or remote
-code.
+<p align="center">
+  <img src="store/assets/screenshot-1-qr-popover-1280x800.png" width="100%" alt="Qrive QR popover open beside a shared Google Drive folder">
+</p>
 
-## Install from the Chrome Web Store
+<p align="center">
+  <img src="store/assets/screenshot-2-shared-items-1280x800.png" width="49%" alt="Qrive QR actions appear only beside shared Google Drive items">
+  <img src="store/assets/screenshot-3-trusted-links-1280x800.png" width="49%" alt="Qrive refuses to generate a QR code when no trusted Drive link is available">
+</p>
 
-Install [Qrive — QR Links for Google Drive][chrome-web-store] from the Chrome
-Web Store, then open or reload Google Drive. Qrive appears only beside items
-that Google Drive already marks as shared.
+## How it works
+
+1. Share a file or folder using Google Drive's normal controls.
+2. Select the Qrive button beside Drive's existing shared icon.
+3. Scan the QR, copy the link, or save it as a PNG.
+
+If Qrive cannot find a trusted Drive URL or stable item ID, it shows a clear
+error instead of producing a potentially incorrect QR code.
+
+## Built for everyday Drive use
+
+- Works with shared files, folders, Google Docs, Sheets, Slides, and Forms.
+- Handles Google Drive's single-page navigation and virtualized, reused rows.
+- Keeps its UI isolated from Drive with Shadow DOM.
+- Supports Korean and English labels, keyboard navigation, focus containment,
+  Escape, and outside-click dismissal.
+- Includes clear copied-link feedback and reduced-motion support.
+- Requests no additional Chrome API permissions beyond access to
+  `https://drive.google.com/*`.
+
+## Install
+
+[Install Qrive from the Chrome Web Store][chrome-web-store], then open or
+reload Google Drive. Qrive appears only beside items that Google Drive already
+marks as shared.
+
+> Qrive is an independent open-source project. It is not affiliated with,
+> endorsed by, or sponsored by Google.
 
 [chrome-web-store]: https://chromewebstore.google.com/detail/qrive-%E2%80%94-qr-links-for-goog/onpipenoogdnnebljkmengnkgilljelm
 
-## Trust and permission model
+## Privacy and trust
 
 The extension runs only on `https://drive.google.com/*` through its declared
 content script. It requests no additional Chrome API permissions.
