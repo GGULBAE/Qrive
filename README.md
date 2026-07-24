@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="store/assets/icon-128.png" width="96" height="96" alt="Qrive app icon">
+  <img src="assets/icons/icon-128.png" width="96" height="96" alt="Qrive app icon">
   <h1>Qrive</h1>
   <p><strong>QR Links for Google Drive</strong></p>
   <p>Turn a Drive item that is already shared into a scannable QR code — in one click.</p>
