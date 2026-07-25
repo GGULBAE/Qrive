@@ -37,8 +37,7 @@ function renderSharedRow(): HTMLElement {
 }
 
 function getButton(row: HTMLElement): HTMLButtonElement {
-  expect(row.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBeNull();
-  const host = document.querySelector<HTMLElement>(`[${QRIVE_HOST_ATTRIBUTE}]`);
+  const host = row.querySelector<HTMLElement>(`[${QRIVE_HOST_ATTRIBUTE}]`);
   const button = host?.shadowRoot?.querySelector<HTMLButtonElement>("button");
   if (!button) {
     throw new Error("Expected Qrive button");
@@ -129,7 +128,26 @@ describe("DriveRowController", () => {
     expect(open.mock.calls[0]?.[0].context.link).toBeNull();
   });
 
-  it("keeps the same overlay button when Drive replaces the row contents", () => {
+  it("does not bubble button interactions to the Drive row", () => {
+    const row = renderSharedRow();
+    const rowPointerDown = vi.fn();
+    const rowClick = vi.fn();
+    row.addEventListener("pointerdown", rowPointerDown);
+    row.addEventListener("click", rowClick);
+    const { controller } = makeController();
+    controller.processRow(row);
+
+    const button = getButton(row);
+    button.dispatchEvent(
+      new Event("pointerdown", { bubbles: true, composed: true }),
+    );
+    button.click();
+
+    expect(rowPointerDown).not.toHaveBeenCalled();
+    expect(rowClick).not.toHaveBeenCalled();
+  });
+
+  it("recreates the row-mounted button when Drive replaces the row contents", () => {
     const row = renderSharedRow();
     const { controller } = makeController();
     controller.processRow(row);
@@ -146,7 +164,7 @@ describe("DriveRowController", () => {
     `;
     controller.processRow(row);
 
-    expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBe(
+    expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).not.toBe(
       originalHost,
     );
     expect(getButton(row).getAttribute("aria-label")).toBe(
@@ -154,36 +172,12 @@ describe("DriveRowController", () => {
     );
   });
 
-  it("positions the overlay beside the shared indicator", () => {
+  it("mounts the button immediately after the shared indicator", () => {
     const row = renderSharedRow();
     const indicator = row.querySelector<HTMLElement>("[aria-label='Shared']");
     if (!indicator) {
       throw new Error("Expected a shared indicator");
     }
-    indicator.getBoundingClientRect = () =>
-      ({
-        bottom: 120,
-        height: 20,
-        left: 100,
-        right: 120,
-        top: 100,
-        width: 20,
-        x: 100,
-        y: 100,
-        toJSON: () => ({}),
-      }) as DOMRect;
-    row.getBoundingClientRect = () =>
-      ({
-        bottom: 140,
-        height: 40,
-        left: 0,
-        right: 800,
-        top: 100,
-        width: 800,
-        x: 0,
-        y: 100,
-        toJSON: () => ({}),
-      }) as DOMRect;
 
     const { controller } = makeController();
     controller.processRow(row);
@@ -191,8 +185,9 @@ describe("DriveRowController", () => {
     const host = document.querySelector<HTMLElement>(
       `[${QRIVE_HOST_ATTRIBUTE}]`,
     );
-    expect(host?.hidden).toBe(false);
-    expect(host?.style.left).toBe("124px");
-    expect(host?.style.top).toBe("96px");
+    expect(host?.parentElement).toBe(indicator.parentElement);
+    expect(indicator.nextElementSibling).toBe(host);
+    expect(host?.style.position).toBe("");
+    expect(host?.style.zIndex).toBe("");
   });
 });

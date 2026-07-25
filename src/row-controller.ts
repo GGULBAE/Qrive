@@ -66,13 +66,7 @@ export class DriveRowController {
       this.updateButton(state.button, context);
       state.signature = context.signature;
     }
-    this.positionButton(state);
-  }
-
-  public refreshPositions(): void {
-    for (const state of this.activeStates) {
-      this.positionButton(state);
-    }
+    this.mountButton(state);
   }
 
   public destroy(): void {
@@ -90,13 +84,6 @@ export class DriveRowController {
   ): RowState {
     const host = document.createElement("span");
     host.setAttribute(QRIVE_HOST_ATTRIBUTE, "");
-    host.style.height = "28px";
-    host.style.margin = "0";
-    host.style.padding = "0";
-    host.style.pointerEvents = "auto";
-    host.style.position = "fixed";
-    host.style.width = "28px";
-    host.style.zIndex = "2147483646";
     const shadow = host.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");
@@ -110,7 +97,11 @@ export class DriveRowController {
       </svg>
     `;
     this.updateButton(button, context);
-    button.addEventListener("click", () => {
+    button.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
       const currentContext = readRowContext(
         row,
         this.messages.genericFileName,
@@ -120,7 +111,7 @@ export class DriveRowController {
     });
 
     shadow.append(style, button);
-    document.documentElement.append(host);
+    indicator.insertAdjacentElement("afterend", host);
 
     const state = {
       button,
@@ -162,34 +153,13 @@ export class DriveRowController {
     }
   }
 
-  private positionButton(state: RowState): void {
+  private mountButton(state: RowState): void {
     if (!state.row.isConnected || !state.indicator.isConnected) {
-      state.host.hidden = true;
       return;
     }
 
-    const indicatorRect = state.indicator.getBoundingClientRect();
-    const rowRect = state.row.getBoundingClientRect();
-    const buttonSize = 28;
-    const gap = 4;
-    const isVisible =
-      indicatorRect.width > 0 &&
-      indicatorRect.height > 0 &&
-      rowRect.width > 0 &&
-      rowRect.height > 0 &&
-      indicatorRect.bottom >= 0 &&
-      indicatorRect.top <= window.innerHeight &&
-      indicatorRect.right >= 0 &&
-      indicatorRect.left <= window.innerWidth;
-
-    state.host.hidden = !isVisible;
-    if (!isVisible) {
-      return;
+    if (state.indicator.nextElementSibling !== state.host) {
+      state.indicator.insertAdjacentElement("afterend", state.host);
     }
-
-    const left = indicatorRect.right + gap;
-    const top = indicatorRect.top + (indicatorRect.height - buttonSize) / 2;
-    state.host.style.left = `${String(Math.round(left))}px`;
-    state.host.style.top = `${String(Math.round(top))}px`;
   }
 }

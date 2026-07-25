@@ -1,11 +1,12 @@
 export const buttonStyles = `
   :host {
+    align-self: center;
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
-    height: 28px;
-    position: fixed;
-    width: 28px;
-    z-index: 2147483646;
+    height: 20px;
+    margin-inline-start: 4px;
+    width: 20px;
   }
 
   :host([hidden]) {
@@ -20,11 +21,11 @@ export const buttonStyles = `
     color: #444746;
     cursor: pointer;
     display: inline-flex;
-    height: 28px;
+    height: 20px;
     justify-content: center;
     margin: 0;
     padding: 0;
-    width: 28px;
+    width: 20px;
   }
 
   button:hover {
@@ -38,8 +39,8 @@ export const buttonStyles = `
 
   svg {
     display: block;
-    height: 18px;
-    width: 18px;
+    height: 16px;
+    width: 16px;
   }
 `;
 

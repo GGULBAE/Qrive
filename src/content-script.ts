@@ -9,13 +9,10 @@ class QriveExtension {
     this.popover,
   );
   private readonly observer = new MutationObserver(() => this.scheduleScan());
-  private positionFrame: number | null = null;
   private scanFrame: number | null = null;
 
   public start(): void {
     this.controller.process(document);
-    window.addEventListener("resize", this.handleViewportChange);
-    window.addEventListener("scroll", this.handleViewportChange, true);
     this.observer.observe(document.body, {
       attributeFilter: [
         "aria-label",
@@ -39,13 +36,8 @@ class QriveExtension {
 
   public stop(): void {
     this.observer.disconnect();
-    window.removeEventListener("resize", this.handleViewportChange);
-    window.removeEventListener("scroll", this.handleViewportChange, true);
     if (this.scanFrame !== null) {
       window.cancelAnimationFrame(this.scanFrame);
-    }
-    if (this.positionFrame !== null) {
-      window.cancelAnimationFrame(this.positionFrame);
     }
     this.controller.destroy();
     this.popover.destroy();
@@ -60,16 +52,6 @@ class QriveExtension {
       this.controller.process(document);
     });
   }
-
-  private readonly handleViewportChange = (): void => {
-    if (this.positionFrame !== null) {
-      return;
-    }
-    this.positionFrame = window.requestAnimationFrame(() => {
-      this.positionFrame = null;
-      this.controller.refreshPositions();
-    });
-  };
 }
 
 const INSTANCE_KEY = "__qriveExtensionInstance";
