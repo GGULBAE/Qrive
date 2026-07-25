@@ -167,7 +167,8 @@ Each injected button and the popover use an open Shadow Root for style
 isolation and testability. Buttons are mounted directly after the shared
 indicator inside the corresponding Drive row, so they inherit the row's
 scrolling and overlay behavior. When Drive recreates a virtualized row, Qrive's
-DOM observer restores the button in the new row content. Qrive does not
+DOM observer reattaches the same button instance in the new row content before
+the next paint and ignores its own insertion mutation. Qrive does not
 monkey-patch Google Drive code.
 
 ## Known DOM dependency

@@ -147,7 +147,7 @@ describe("DriveRowController", () => {
     expect(rowClick).not.toHaveBeenCalled();
   });
 
-  it("recreates the row-mounted button when Drive replaces the row contents", () => {
+  it("reattaches the same button when Drive replaces the row contents", () => {
     const row = renderSharedRow();
     const { controller } = makeController();
     controller.processRow(row);
@@ -164,7 +164,7 @@ describe("DriveRowController", () => {
     `;
     controller.processRow(row);
 
-    expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).not.toBe(
+    expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBe(
       originalHost,
     );
     expect(getButton(row).getAttribute("aria-label")).toBe(
@@ -189,5 +189,26 @@ describe("DriveRowController", () => {
     expect(indicator.nextElementSibling).toBe(host);
     expect(host?.style.position).toBe("");
     expect(host?.style.zIndex).toBe("");
+  });
+
+  it("does not reorder a mounted button when Drive adds a nearby control", () => {
+    const row = renderSharedRow();
+    const indicator = row.querySelector<HTMLElement>("[aria-label='Shared']");
+    if (!indicator) {
+      throw new Error("Expected a shared indicator");
+    }
+    const { controller } = makeController();
+    controller.processRow(row);
+    const host = row.querySelector<HTMLElement>(
+      `[${QRIVE_HOST_ATTRIBUTE}]`,
+    );
+    const driveControl = document.createElement("span");
+    driveControl.setAttribute("data-drive-hover-control", "");
+    indicator.insertAdjacentElement("afterend", driveControl);
+
+    controller.processRow(row);
+
+    expect(indicator.nextElementSibling).toBe(driveControl);
+    expect(driveControl.nextElementSibling).toBe(host);
   });
 });

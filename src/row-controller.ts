@@ -53,10 +53,7 @@ export class DriveRowController {
 
     const context = readRowContext(row, this.messages.genericFileName);
     let state = this.states.get(row);
-    if (!state || !state.host.isConnected) {
-      if (state) {
-        this.activeStates.delete(state);
-      }
+    if (!state) {
       state = this.createButton(row, indicator, context);
       this.states.set(row, state);
     }
@@ -158,7 +155,7 @@ export class DriveRowController {
       return;
     }
 
-    if (state.indicator.nextElementSibling !== state.host) {
+    if (state.host.parentElement !== state.indicator.parentElement) {
       state.indicator.insertAdjacentElement("afterend", state.host);
     }
   }

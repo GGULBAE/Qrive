@@ -1,4 +1,8 @@
 import { detectLocale } from "./i18n";
+import {
+  mutationsOnlyAddQriveHosts,
+  mutationsRemoveQriveHost,
+} from "./mutations";
 import { QrivePopover } from "./popover";
 import { DriveRowController } from "./row-controller";
 
@@ -8,7 +12,18 @@ class QriveExtension {
     detectLocale(),
     this.popover,
   );
-  private readonly observer = new MutationObserver(() => this.scheduleScan());
+  private readonly observer = new MutationObserver((records) => {
+    if (mutationsRemoveQriveHost(records)) {
+      // Drive replaces row contents during hover and selection. Restore a
+      // removed button in the mutation microtask so it is present before paint.
+      this.controller.process(document);
+      return;
+    }
+
+    if (!mutationsOnlyAddQriveHosts(records)) {
+      this.scheduleScan();
+    }
+  });
   private scanFrame: number | null = null;
 
   public start(): void {
