@@ -3,6 +3,7 @@ dist/
 artifacts/
 coverage/
 *.log
+gha-creds-*.json
 .DS_Store
 Thumbs.db
 .env

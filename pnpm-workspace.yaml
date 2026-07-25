@@ -4,3 +4,9 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+
+minimumReleaseAgeExclude:
+  - brace-expansion@5.0.8
+
+overrides:
+  brace-expansion@<=5.0.7: ^5.0.8

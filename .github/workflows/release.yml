@@ -1,0 +1,154 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pinned pnpm through Corepack
+        run: |
+          corepack enable
+          corepack install
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify tag and package versions
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_version="$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version)")"
+          manifest_version="$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('manifest.json', 'utf8')).version)")"
+          expected_tag="v${package_version}"
+
+          if [[ "${manifest_version}" != "${package_version}" ]]; then
+            echo "::error::package.json (${package_version}) and manifest.json (${manifest_version}) versions differ."
+            exit 1
+          fi
+
+          if [[ "${GITHUB_REF_NAME}" != "${expected_tag}" ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} must match ${expected_tag}."
+            exit 1
+          fi
+
+          echo "version=${package_version}" >> "${GITHUB_OUTPUT}"
+          echo "zip_path=artifacts/qrive-${GITHUB_REF_NAME}.zip" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify extension
+        run: pnpm check
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level high
+
+      - name: Build release package
+        run: pnpm package
+
+      - name: Create checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip_path="${{ steps.release.outputs.zip_path }}"
+          test -f "${zip_path}"
+          sha256sum "${zip_path}" > "${zip_path}.sha256"
+
+      - name: Create or update GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          ZIP_PATH: ${{ steps.release.outputs.zip_path }}
+        run: |
+          set -euo pipefail
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload "${TAG}" \
+              "${ZIP_PATH}" \
+              "${ZIP_PATH}.sha256" \
+              --clobber \
+              --repo "${GITHUB_REPOSITORY}"
+          else
+            gh release create "${TAG}" \
+              "${ZIP_PATH}#Qrive Chrome extension package" \
+              "${ZIP_PATH}.sha256#SHA-256 checksum" \
+              --generate-notes \
+              --title "Qrive ${TAG}" \
+              --verify-tag \
+              --repo "${GITHUB_REPOSITORY}"
+          fi
+
+  chrome-web-store:
+    if: >-
+      ${{
+        vars.CWS_PUBLISHER_ID != '' &&
+        vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' &&
+        vars.GCP_SERVICE_ACCOUNT != ''
+      }}
+    needs: github-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Download GitHub Release package
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          gh release download "${GITHUB_REF_NAME}" \
+            --pattern "qrive-${GITHUB_REF_NAME}.zip" \
+            --dir artifacts \
+            --repo "${GITHUB_REPOSITORY}"
+
+      - name: Authenticate to Google Cloud
+        id: google-auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 600s
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore
+
+      - name: Upload and submit to Chrome Web Store
+        env:
+          CWS_ACCESS_TOKEN: ${{ steps.google-auth.outputs.access_token }}
+          CWS_ITEM_ID: onpipenoogdnnebljkmengnkgilljelm
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ZIP_PATH: artifacts/qrive-${{ github.ref_name }}.zip
+        run: node scripts/publish-chrome-web-store.mjs

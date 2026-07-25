@@ -7,6 +7,7 @@ Chrome Web Store listing. It is not included in the extension ZIP.
 - `privacy-answers.md`: privacy-tab answers and permission justifications
 - `test-instructions.md`: reviewer instructions
 - `publishing-checklist.md`: release and dashboard checklist
+- `automated-release.md`: GitHub and Chrome Web Store API automation setup
 - `submission-record.md`: current submitted item and review status
 - `assets/`: generated screenshots and promotional graphics
 

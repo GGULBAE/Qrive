@@ -209,17 +209,16 @@ real Drive links, item IDs, file names, or account data in a public issue.
 
 ## Release and Chrome Web Store deployment
 
-1. Update the version in `package.json` and `manifest.json`.
-2. Run `corepack install` and `pnpm install --frozen-lockfile`.
-3. Run `pnpm check`.
-4. Run `pnpm store-assets` and `pnpm package`.
-5. Inspect the generated ZIP and load its uncompressed contents in a clean
-   Chrome profile.
-6. Upload the ZIP in the Chrome Web Store developer dashboard.
-7. Complete the listing and privacy fields from the version-controlled
-   [store submission kit](store/README.md), then submit for review.
+Pushing a version tag such as `v0.1.2` runs the release workflow. GitHub verifies
+the extension, creates the ZIP and checksum, and publishes both as a GitHub
+Release. When the repository's Google Cloud OIDC variables are configured, the
+same workflow uploads the package through Chrome Web Store API v2 and submits
+it for review.
 
-No publishing credential belongs in this repository.
+Use `pnpm release:version 0.1.2` to keep `package.json` and `manifest.json` in
+sync. See the [automated release setup](store/automated-release.md) for the
+one-time service-account configuration and release commands. No long-lived
+publishing credential belongs in this repository.
 
 Qrive is an independent open-source project and is not affiliated with,
 endorsed by, or sponsored by Google. Google Drive is a trademark of Google LLC.
