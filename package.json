@@ -1,6 +1,6 @@
 {
   "name": "qrive",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Qrive — QR Links for Google Drive",
   "license": "MIT",
