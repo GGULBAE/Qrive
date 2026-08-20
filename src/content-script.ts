@@ -27,8 +27,43 @@ class QriveExtension {
   private scanFrame: number | null = null;
 
   public start(): void {
+    if (!document.body) {
+      document.addEventListener(
+        "DOMContentLoaded",
+        this.handleDocumentReady,
+        { once: true },
+      );
+      return;
+    }
+
+    this.observeDrive();
+  }
+
+  public stop(): void {
+    document.removeEventListener(
+      "DOMContentLoaded",
+      this.handleDocumentReady,
+    );
+    this.observer.disconnect();
+    if (this.scanFrame !== null) {
+      window.cancelAnimationFrame(this.scanFrame);
+    }
+    this.controller.destroy();
+    this.popover.destroy();
+  }
+
+  private readonly handleDocumentReady = (): void => {
+    this.observeDrive();
+  };
+
+  private observeDrive(): void {
+    const body = document.body;
+    if (!body) {
+      return;
+    }
+
     this.controller.process(document);
-    this.observer.observe(document.body, {
+    this.observer.observe(body, {
       attributeFilter: [
         "aria-label",
         "data-href",
@@ -47,15 +82,6 @@ class QriveExtension {
       characterData: true,
       subtree: true,
     });
-  }
-
-  public stop(): void {
-    this.observer.disconnect();
-    if (this.scanFrame !== null) {
-      window.cancelAnimationFrame(this.scanFrame);
-    }
-    this.controller.destroy();
-    this.popover.destroy();
   }
 
   private scheduleScan(): void {

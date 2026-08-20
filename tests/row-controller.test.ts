@@ -36,9 +36,20 @@ function renderSharedRow(): HTMLElement {
   return row;
 }
 
-function getButton(row: HTMLElement): HTMLButtonElement {
-  const host = row.querySelector<HTMLElement>(`[${QRIVE_HOST_ATTRIBUTE}]`);
-  const button = host?.shadowRoot?.querySelector<HTMLButtonElement>("button");
+function getHost(): HTMLSpanElement {
+  const host = document.querySelector<HTMLSpanElement>(
+    `[${QRIVE_HOST_ATTRIBUTE}]`,
+  );
+  if (!host) {
+    throw new Error("Expected Qrive button host");
+  }
+  return host;
+}
+
+function getButton(): HTMLButtonElement {
+  const button = getHost().shadowRoot?.querySelector<HTMLButtonElement>(
+    "button",
+  );
   if (!button) {
     throw new Error("Expected Qrive button");
   }
@@ -68,7 +79,7 @@ describe("DriveRowController", () => {
     expect(
       document.querySelectorAll(`[${QRIVE_HOST_ATTRIBUTE}]`),
     ).toHaveLength(1);
-    expect(getButton(row).getAttribute("aria-label")).toBe(
+    expect(getButton().title).toBe(
       "Create a QR code for Alpha.pdf",
     );
   });
@@ -88,8 +99,8 @@ describe("DriveRowController", () => {
     link.textContent = "Beta.pdf";
 
     controller.processRow(row);
-    const button = getButton(row);
-    expect(button.getAttribute("aria-label")).toBe(
+    const button = getButton();
+    expect(button.title).toBe(
       "Create a QR code for Beta.pdf",
     );
 
@@ -123,7 +134,7 @@ describe("DriveRowController", () => {
     const { controller, open } = makeController();
     controller.processRow(row);
 
-    getButton(row).click();
+    getButton().click();
 
     expect(open.mock.calls[0]?.[0].context.link).toBeNull();
   });
@@ -131,20 +142,45 @@ describe("DriveRowController", () => {
   it("does not bubble button interactions to the Drive row", () => {
     const row = renderSharedRow();
     const rowPointerDown = vi.fn();
+    const rowMouseDown = vi.fn();
     const rowClick = vi.fn();
     row.addEventListener("pointerdown", rowPointerDown);
+    row.addEventListener("mousedown", rowMouseDown);
     row.addEventListener("click", rowClick);
     const { controller } = makeController();
     controller.processRow(row);
 
-    const button = getButton(row);
-    button.dispatchEvent(
-      new Event("pointerdown", { bubbles: true, composed: true }),
-    );
-    button.click();
+    getButton().click();
 
     expect(rowPointerDown).not.toHaveBeenCalled();
+    expect(rowMouseDown).not.toHaveBeenCalled();
     expect(rowClick).not.toHaveBeenCalled();
+  });
+
+  it("opens outside Drive's captured click event path", () => {
+    const row = renderSharedRow();
+    const driveCapture = vi.fn((event: Event) => {
+      event.stopImmediatePropagation();
+    });
+    document.addEventListener("click", driveCapture, true);
+    const { controller, open } = makeController();
+    controller.processRow(row);
+
+    getButton().click();
+
+    document.removeEventListener("click", driveCapture, true);
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(driveCapture).not.toHaveBeenCalled();
+  });
+
+  it("ignores clicks outside the portal button", () => {
+    const row = renderSharedRow();
+    const { controller, open } = makeController();
+    controller.processRow(row);
+
+    document.body.click();
+
+    expect(open).not.toHaveBeenCalled();
   });
 
   it("reattaches the same button when Drive replaces the row contents", () => {
@@ -167,31 +203,41 @@ describe("DriveRowController", () => {
     expect(document.querySelector(`[${QRIVE_HOST_ATTRIBUTE}]`)).toBe(
       originalHost,
     );
-    expect(getButton(row).getAttribute("aria-label")).toBe(
-      "Create a QR code for Gamma.pdf",
-    );
+    expect(getButton().title).toBe("Create a QR code for Gamma.pdf");
   });
 
-  it("mounts the button immediately after the shared indicator", () => {
+  it("mounts a fixed portal button beside the shared indicator", () => {
     const row = renderSharedRow();
     const indicator = row.querySelector<HTMLElement>("[aria-label='Shared']");
     if (!indicator) {
       throw new Error("Expected a shared indicator");
     }
+    vi.spyOn(indicator, "getBoundingClientRect").mockReturnValue({
+      bottom: 70,
+      height: 20,
+      left: 100,
+      right: 120,
+      top: 50,
+      width: 20,
+      x: 100,
+      y: 50,
+      toJSON: () => ({}),
+    });
 
     const { controller } = makeController();
     controller.processRow(row);
 
-    const host = document.querySelector<HTMLElement>(
-      `[${QRIVE_HOST_ATTRIBUTE}]`,
-    );
-    expect(host?.parentElement).toBe(indicator.parentElement);
-    expect(indicator.nextElementSibling).toBe(host);
-    expect(host?.style.position).toBe("");
-    expect(host?.style.zIndex).toBe("");
+    const host = getHost();
+    expect(host.parentElement).toBe(document.documentElement);
+    expect(host.style.left).toBe("124px");
+    expect(host.style.top).toBe("50px");
+    expect(host.style.position).toBe("fixed");
+    expect(host.style.zIndex).toBe("2147483646");
+    expect(host.hidden).toBe(false);
+    expect(host.dataset.qriveRuntime).toBe("portal-button-v8");
   });
 
-  it("does not reorder a mounted button when Drive adds a nearby control", () => {
+  it("keeps the portal outside Drive when Drive adds a nearby control", () => {
     const row = renderSharedRow();
     const indicator = row.querySelector<HTMLElement>("[aria-label='Shared']");
     if (!indicator) {
@@ -199,9 +245,7 @@ describe("DriveRowController", () => {
     }
     const { controller } = makeController();
     controller.processRow(row);
-    const host = row.querySelector<HTMLElement>(
-      `[${QRIVE_HOST_ATTRIBUTE}]`,
-    );
+    const host = getHost();
     const driveControl = document.createElement("span");
     driveControl.setAttribute("data-drive-hover-control", "");
     indicator.insertAdjacentElement("afterend", driveControl);
@@ -209,6 +253,7 @@ describe("DriveRowController", () => {
     controller.processRow(row);
 
     expect(indicator.nextElementSibling).toBe(driveControl);
-    expect(driveControl.nextElementSibling).toBe(host);
+    expect(host.parentElement).toBe(document.documentElement);
+    expect(row.contains(host)).toBe(false);
   });
 });

@@ -10,6 +10,8 @@ interface OpenOptions {
 }
 
 const POPOVER_HOST_ATTRIBUTE = "data-qrive-popover-host";
+const RUNTIME_ATTRIBUTE = "data-qrive-runtime";
+const RUNTIME_REVISION = "portal-button-v8";
 
 function createElement<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
@@ -72,20 +74,26 @@ export class QrivePopover {
     this.messages = getMessages(locale);
     this.host = createElement("div");
     this.host.setAttribute(POPOVER_HOST_ATTRIBUTE, "");
+    this.host.setAttribute(RUNTIME_ATTRIBUTE, RUNTIME_REVISION);
     this.shadow = this.host.attachShadow({ mode: "open" });
 
     const style = createElement("style");
     style.textContent = popoverStyles;
     this.shadow.append(style);
-    document.documentElement.append(this.host);
+    this.mountHost();
 
     document.addEventListener("pointerdown", this.handleOutsidePointer, true);
     document.addEventListener("keydown", this.handleDocumentKeydown, true);
+    window.addEventListener("pointerdown", this.handleInternalPointer, true);
+    window.addEventListener("mousedown", this.handleInternalPointer, true);
+    window.addEventListener("pointerup", this.handleInternalPointer, true);
+    window.addEventListener("mouseup", this.handleInternalPointer, true);
     window.addEventListener("resize", this.handleViewportChange);
     window.addEventListener("scroll", this.handleViewportChange, true);
   }
 
   public async open({ anchor, context }: OpenOptions): Promise<void> {
+    this.mountHost();
     this.close(false);
     this.activeAnchor = anchor;
 
@@ -97,6 +105,9 @@ export class QrivePopover {
     // handlers. Drive can rebuild its rows after those handlers run, leaving
     // the visible QR buttons detached from their original click listeners.
     popover.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    popover.addEventListener("mousedown", (event) => {
       event.stopPropagation();
     });
     popover.addEventListener("click", (event) => {
@@ -129,6 +140,13 @@ export class QrivePopover {
     popover.append(status);
 
     const trustedLink = context.link;
+    let qrContent:
+      | {
+          readonly actions: HTMLDivElement;
+          readonly canvas: HTMLCanvasElement;
+          readonly frame: HTMLDivElement;
+        }
+      | undefined;
     if (trustedLink) {
       const frame = createElement("div", "qr-frame");
       const canvas = createElement("canvas");
@@ -156,24 +174,7 @@ export class QrivePopover {
       });
       actions.append(copyButton, saveButton);
       popover.append(actions);
-
-      try {
-        await QRCode.toCanvas(canvas, trustedLink.url, {
-          color: { dark: "#1f1f1f", light: "#ffffff" },
-          errorCorrectionLevel: "M",
-          margin: 2,
-          width: 240,
-        });
-      } catch {
-        frame.remove();
-        actions.remove();
-        popover.append(
-          this.createError(
-            this.messages.errorTitle,
-            this.messages.qrRenderFailed,
-          ),
-        );
-      }
+      qrContent = { actions, canvas, frame };
     } else {
       popover.append(
         this.createError(
@@ -191,6 +192,34 @@ export class QrivePopover {
     this.popover = popover;
     this.position(anchor);
     closeButton.focus({ preventScroll: true });
+
+    if (!trustedLink || !qrContent) {
+      return;
+    }
+
+    try {
+      await QRCode.toCanvas(qrContent.canvas, trustedLink.url, {
+        color: { dark: "#1f1f1f", light: "#ffffff" },
+        errorCorrectionLevel: "M",
+        margin: 2,
+        width: 240,
+      });
+    } catch {
+      // A newer click may already have replaced this popover while the QR
+      // renderer was pending. Never let a stale render alter the active one.
+      if (this.popover !== popover) {
+        return;
+      }
+      qrContent.frame.remove();
+      qrContent.actions.remove();
+      popover.insertBefore(
+        this.createError(
+          this.messages.errorTitle,
+          this.messages.qrRenderFailed,
+        ),
+        notice,
+      );
+    }
   }
 
   public close(restoreFocus = true): void {
@@ -207,6 +236,10 @@ export class QrivePopover {
     this.close(false);
     document.removeEventListener("pointerdown", this.handleOutsidePointer, true);
     document.removeEventListener("keydown", this.handleDocumentKeydown, true);
+    window.removeEventListener("pointerdown", this.handleInternalPointer, true);
+    window.removeEventListener("mousedown", this.handleInternalPointer, true);
+    window.removeEventListener("pointerup", this.handleInternalPointer, true);
+    window.removeEventListener("mouseup", this.handleInternalPointer, true);
     window.removeEventListener("resize", this.handleViewportChange);
     window.removeEventListener("scroll", this.handleViewportChange, true);
     this.host.remove();
@@ -222,6 +255,19 @@ export class QrivePopover {
       return;
     }
     this.close();
+  };
+
+  private mountHost(): void {
+    if (this.host.isConnected) {
+      return;
+    }
+    (document.documentElement ?? document.body)?.append(this.host);
+  }
+
+  private readonly handleInternalPointer = (event: Event): void => {
+    if (event.composedPath().includes(this.host)) {
+      event.stopImmediatePropagation();
+    }
   };
 
   private readonly handleDocumentKeydown = (event: KeyboardEvent): void => {

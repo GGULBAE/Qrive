@@ -1,11 +1,9 @@
 export const buttonStyles = `
   :host {
-    align-self: center;
-    display: inline-flex;
-    flex: 0 0 auto;
     align-items: center;
+    display: inline-flex;
     height: 20px;
-    margin-inline-start: 4px;
+    justify-content: center;
     width: 20px;
   }
 
@@ -34,7 +32,7 @@ export const buttonStyles = `
 
   button:focus-visible {
     outline: 2px solid #0b57d0;
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 
   svg {

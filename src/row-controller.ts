@@ -9,6 +9,10 @@ import { getMessages, type Locale } from "./i18n";
 import type { QrivePopover } from "./popover";
 import { buttonStyles } from "./styles";
 
+const BUTTON_GAP = 4;
+const BUTTON_SIZE = 20;
+const RUNTIME_REVISION = "portal-button-v8";
+
 interface RowState {
   readonly button: HTMLButtonElement;
   readonly host: HTMLSpanElement;
@@ -29,12 +33,21 @@ export class DriveRowController {
   private readonly messages: ReturnType<typeof getMessages>;
   private readonly popover: PopoverAdapter;
   private readonly states = new WeakMap<HTMLElement, RowState>();
+  private readonly statesByHost = new WeakMap<HTMLSpanElement, RowState>();
   private readonly activeStates = new Set<RowState>();
+  private positionFrame: number | null = null;
 
   public constructor(locale: Locale, popover: QrivePopover | PopoverAdapter) {
     this.locale = locale;
     this.messages = getMessages(locale);
     this.popover = popover;
+    window.addEventListener("pointerdown", this.handlePortalEvent, true);
+    window.addEventListener("mousedown", this.handlePortalEvent, true);
+    window.addEventListener("pointerup", this.handlePortalEvent, true);
+    window.addEventListener("mouseup", this.handlePortalEvent, true);
+    window.addEventListener("click", this.handlePortalEvent, true);
+    window.addEventListener("resize", this.handleViewportChange);
+    window.addEventListener("scroll", this.handleViewportChange, true);
   }
 
   public process(root: ParentNode): void {
@@ -67,9 +80,20 @@ export class DriveRowController {
   }
 
   public destroy(): void {
+    window.removeEventListener("pointerdown", this.handlePortalEvent, true);
+    window.removeEventListener("mousedown", this.handlePortalEvent, true);
+    window.removeEventListener("pointerup", this.handlePortalEvent, true);
+    window.removeEventListener("mouseup", this.handlePortalEvent, true);
+    window.removeEventListener("click", this.handlePortalEvent, true);
+    window.removeEventListener("resize", this.handleViewportChange);
+    window.removeEventListener("scroll", this.handleViewportChange, true);
+    if (this.positionFrame !== null) {
+      window.cancelAnimationFrame(this.positionFrame);
+    }
     for (const state of this.activeStates) {
       state.host.remove();
       this.states.delete(state.row);
+      this.statesByHost.delete(state.host);
     }
     this.activeStates.clear();
   }
@@ -81,6 +105,12 @@ export class DriveRowController {
   ): RowState {
     const host = document.createElement("span");
     host.setAttribute(QRIVE_HOST_ATTRIBUTE, "");
+    host.setAttribute("data-qrive-runtime", RUNTIME_REVISION);
+    host.style.height = `${BUTTON_SIZE}px`;
+    host.style.pointerEvents = "auto";
+    host.style.position = "fixed";
+    host.style.width = `${BUTTON_SIZE}px`;
+    host.style.zIndex = "2147483646";
     const shadow = host.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");
@@ -94,32 +124,63 @@ export class DriveRowController {
       </svg>
     `;
     this.updateButton(button, context);
-    button.addEventListener("pointerdown", (event) => {
-      event.stopPropagation();
-    });
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const currentContext = readRowContext(
-        row,
-        this.messages.genericFileName,
-      );
-      this.updateButton(button, currentContext);
-      void this.popover.open({ anchor: button, context: currentContext });
-    });
-
     shadow.append(style, button);
-    indicator.insertAdjacentElement("afterend", host);
 
-    const state = {
+    const state: RowState = {
       button,
       host,
       indicator,
       row,
       signature: context.signature,
     };
+    this.statesByHost.set(host, state);
     this.activeStates.add(state);
+    this.mountButton(state);
     return state;
   }
+
+  private readonly handlePortalEvent = (event: Event): void => {
+    const host = event.composedPath().find(
+      (target): target is HTMLSpanElement =>
+        target instanceof HTMLSpanElement &&
+        target.hasAttribute(QRIVE_HOST_ATTRIBUTE),
+    );
+    const state = host ? this.statesByHost.get(host) : undefined;
+    if (!state) {
+      return;
+    }
+
+    event.stopImmediatePropagation();
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    if (event.type !== "click") {
+      return;
+    }
+
+    const currentContext = readRowContext(
+      state.row,
+      this.messages.genericFileName,
+    );
+    this.updateButton(state.button, currentContext);
+    state.button.focus({ preventScroll: true });
+    void this.popover.open({
+      anchor: state.button,
+      context: currentContext,
+    });
+  };
+
+  private readonly handleViewportChange = (): void => {
+    if (this.positionFrame !== null) {
+      return;
+    }
+    this.positionFrame = window.requestAnimationFrame(() => {
+      this.positionFrame = null;
+      for (const state of this.activeStates) {
+        this.positionButton(state);
+      }
+    });
+  };
 
   private updateButton(
     button: HTMLButtonElement,
@@ -138,6 +199,7 @@ export class DriveRowController {
     state?.host.remove();
     if (state) {
       this.activeStates.delete(state);
+      this.statesByHost.delete(state.host);
     }
     this.states.delete(row);
   }
@@ -152,11 +214,36 @@ export class DriveRowController {
 
   private mountButton(state: RowState): void {
     if (!state.row.isConnected || !state.indicator.isConnected) {
+      state.host.hidden = true;
       return;
     }
 
-    if (state.host.parentElement !== state.indicator.parentElement) {
-      state.indicator.insertAdjacentElement("afterend", state.host);
+    if (!state.host.isConnected) {
+      document.documentElement.append(state.host);
     }
+    this.positionButton(state);
+  }
+
+  private positionButton(state: RowState): void {
+    const rect = state.indicator.getBoundingClientRect();
+    const isVisible =
+      state.row.isConnected &&
+      state.indicator.isConnected &&
+      rect.width > 0 &&
+      rect.height > 0 &&
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < window.innerHeight &&
+      rect.left < window.innerWidth;
+
+    state.host.hidden = !isVisible;
+    if (!isVisible) {
+      return;
+    }
+
+    state.host.style.left = `${Math.round(rect.right + BUTTON_GAP)}px`;
+    state.host.style.top = `${Math.round(
+      rect.top + (rect.height - BUTTON_SIZE) / 2,
+    )}px`;
   }
 }

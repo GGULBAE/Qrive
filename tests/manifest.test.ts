@@ -40,7 +40,7 @@ describe("extension manifest", () => {
       {
         matches: ["https://drive.google.com/*"],
         js: ["content-script.js"],
-        run_at: "document_idle",
+        run_at: "document_start",
       },
     ]);
     expect(manifest.permissions).toBeUndefined();

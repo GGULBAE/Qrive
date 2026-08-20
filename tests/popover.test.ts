@@ -1,11 +1,15 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RowContext } from "../src/drive-dom";
 import { QrivePopover } from "../src/popover";
 
+const { toCanvas } = vi.hoisted(() => ({
+  toCanvas: vi.fn(),
+}));
+
 vi.mock("qrcode", () => ({
   default: {
-    toCanvas: vi.fn().mockResolvedValue(undefined),
+    toCanvas,
   },
 }));
 
@@ -26,6 +30,10 @@ const trustedContext: RowContext = {
 };
 
 const popovers: QrivePopover[] = [];
+
+beforeEach(() => {
+  toCanvas.mockResolvedValue(undefined);
+});
 
 afterEach(() => {
   for (const popover of popovers.splice(0)) {
@@ -104,8 +112,10 @@ describe("QrivePopover accessibility", () => {
     const anchor = document.createElement("button");
     document.body.append(anchor);
     const documentPointerDown = vi.fn();
+    const documentMouseDown = vi.fn();
     const documentClick = vi.fn();
     document.addEventListener("pointerdown", documentPointerDown);
+    document.addEventListener("mousedown", documentMouseDown);
     document.addEventListener("click", documentClick);
     const popover = new QrivePopover("en");
     popovers.push(popover);
@@ -119,14 +129,65 @@ describe("QrivePopover accessibility", () => {
     closeButton?.dispatchEvent(
       new Event("pointerdown", { bubbles: true, composed: true }),
     );
+    closeButton?.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, composed: true }),
+    );
     closeButton?.click();
     document.removeEventListener("pointerdown", documentPointerDown);
+    document.removeEventListener("mousedown", documentMouseDown);
     document.removeEventListener("click", documentClick);
 
     expect(documentPointerDown).not.toHaveBeenCalled();
+    expect(documentMouseDown).not.toHaveBeenCalled();
     expect(documentClick).not.toHaveBeenCalled();
     expect(host?.shadowRoot?.querySelector("[role='dialog']")).toBeNull();
     expect(document.activeElement).toBe(anchor);
+  });
+
+  it("opens immediately and ignores an older QR render after reopening", async () => {
+    const resolvers: Array<() => void> = [];
+    toCanvas.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    const popover = new QrivePopover("en");
+    popovers.push(popover);
+
+    const firstOpen = popover.open({ anchor, context: trustedContext });
+    const host = document.querySelector<HTMLElement>(
+      "[data-qrive-popover-host]",
+    );
+    expect(host?.shadowRoot?.querySelector("[role='dialog']")).not.toBeNull();
+
+    host?.shadowRoot
+      ?.querySelector<HTMLButtonElement>(".close")
+      ?.click();
+    const secondContext = {
+      ...trustedContext,
+      fileName: "second.pdf",
+      signature: `second.pdf\u0000${trustedContext.link?.url ?? "untrusted"}`,
+    };
+    const secondOpen = popover.open({ anchor, context: secondContext });
+
+    expect(
+      host?.shadowRoot?.querySelectorAll("[role='dialog']"),
+    ).toHaveLength(1);
+    expect(host?.shadowRoot?.querySelector(".file-name")?.textContent).toBe(
+      "second.pdf",
+    );
+
+    resolvers[0]?.();
+    await firstOpen;
+    expect(host?.shadowRoot?.querySelector(".file-name")?.textContent).toBe(
+      "second.pdf",
+    );
+
+    resolvers[1]?.();
+    await secondOpen;
   });
 
   it("animates a clear confirmation after copying a trusted link", async () => {
