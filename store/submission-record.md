@@ -37,6 +37,22 @@
 - Update summary: Fixed QR buttons becoming unresponsive after repeatedly
   closing the popover. No new permissions or data collection were added.
 
+## Qrive 0.1.4
+
+- Submitted: August 20, 2026
+- Status at submission: Pending review
+- Publishing: Automatically publish after review approval
+- Visibility: Existing public distribution preserved
+- Submission method: Chrome Web Store API
+- Package: `artifacts/qrive-v0.1.4.zip`
+- Package SHA-256:
+  `425E59DA1FBE5A9C6D03F71F5A3632115486FBCF3F972262D92B7C2BB07391AE`
+- GitHub release:
+  https://github.com/GGULBAE/Qrive/releases/tag/v0.1.4
+- Update summary: Kept the QR action visible and responsive through Drive row
+  hover and repeated use by isolating it from Drive's event handling. No new
+  permissions or data collection were added.
+
 ## Privacy declaration
 
 - Single purpose: add a local QR-code action to Drive items already marked as
