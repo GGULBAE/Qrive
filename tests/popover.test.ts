@@ -100,6 +100,35 @@ describe("QrivePopover accessibility", () => {
     expect(host?.shadowRoot?.querySelector("[role='dialog']")).toBeNull();
   });
 
+  it("does not bubble popover interactions to Google Drive", async () => {
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    const documentPointerDown = vi.fn();
+    const documentClick = vi.fn();
+    document.addEventListener("pointerdown", documentPointerDown);
+    document.addEventListener("click", documentClick);
+    const popover = new QrivePopover("en");
+    popovers.push(popover);
+    await popover.open({ anchor, context: untrustedContext });
+
+    const host = document.querySelector<HTMLElement>(
+      "[data-qrive-popover-host]",
+    );
+    const closeButton =
+      host?.shadowRoot?.querySelector<HTMLButtonElement>(".close");
+    closeButton?.dispatchEvent(
+      new Event("pointerdown", { bubbles: true, composed: true }),
+    );
+    closeButton?.click();
+    document.removeEventListener("pointerdown", documentPointerDown);
+    document.removeEventListener("click", documentClick);
+
+    expect(documentPointerDown).not.toHaveBeenCalled();
+    expect(documentClick).not.toHaveBeenCalled();
+    expect(host?.shadowRoot?.querySelector("[role='dialog']")).toBeNull();
+    expect(document.activeElement).toBe(anchor);
+  });
+
   it("animates a clear confirmation after copying a trusted link", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {

@@ -93,6 +93,15 @@ export class QrivePopover {
     popover.setAttribute("role", "dialog");
     popover.setAttribute("aria-labelledby", "qrive-dialog-title");
     popover.tabIndex = -1;
+    // Keep interactions inside Qrive from reaching Drive's document-level
+    // handlers. Drive can rebuild its rows after those handlers run, leaving
+    // the visible QR buttons detached from their original click listeners.
+    popover.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    popover.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
 
     const header = createElement("div", "header");
     const title = createElement("h2");
@@ -102,7 +111,12 @@ export class QrivePopover {
     closeButton.type = "button";
     closeButton.setAttribute("aria-label", this.messages.closeLabel);
     closeButton.textContent = "×";
-    closeButton.addEventListener("click", () => this.close());
+    closeButton.addEventListener("click", (event) => {
+      // Stop at the button before close() removes its popover ancestor from
+      // the event path.
+      event.stopPropagation();
+      this.close();
+    });
     header.append(title, closeButton);
 
     const fileName = createElement("p", "file-name");
