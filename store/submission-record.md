@@ -20,6 +20,23 @@
 - Package SHA-256:
   `0FBB74F87B574005EE70247216D4C5F8FA81394DA64F2A9D1EE643650EC5EF10`
 
+## Qrive 0.1.3
+
+- Submitted: August 20, 2026
+- Published: Pending review
+- Current live version at submission: `0.1.2`
+- Status at submission: Pending review
+- Publishing: Automatically publish after review approval
+- Visibility: Existing public distribution preserved
+- Submission method: Chrome Web Store API
+- Package: `artifacts/qrive-v0.1.3.zip`
+- Package SHA-256:
+  `987CF2FAE553439A50FC82AF978A59B148CF3086D0DB5D7D6C26DD9CFEE7779C`
+- GitHub release:
+  https://github.com/GGULBAE/Qrive/releases/tag/v0.1.3
+- Update summary: Fixed QR buttons becoming unresponsive after repeatedly
+  closing the popover. No new permissions or data collection were added.
+
 ## Privacy declaration
 
 - Single purpose: add a local QR-code action to Drive items already marked as
