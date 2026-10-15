@@ -53,6 +53,32 @@
   hover and repeated use by isolating it from Drive's event handling. No new
   permissions or data collection were added.
 
+## Qrive 0.1.5
+
+- Submitted: October 15, 2026
+- Status at submission: Pending review (`PENDING_REVIEW`)
+- Upload status: `SUCCEEDED`
+- Publishing: Automatically publish after review approval
+- Visibility: Existing public distribution preserved
+- Submission method: Chrome Web Store API through GitHub Actions
+- Package: `artifacts/qrive-v0.1.5.zip` from the GitHub Release
+- Package SHA-256:
+  `2CCAD525A38CAB3D8048A77FE0ADBC97BEEDD3082A46BEE706026FFB239092BD`
+- GitHub release:
+  https://github.com/GGULBAE/Qrive/releases/tag/v0.1.5
+- Release workflow:
+  https://github.com/GGULBAE/Qrive/actions/runs/38739893721
+- Update summary: Lowered the QR action's stacking level so Drive menus and
+  dialogs cover overlapping buttons without hiding other QR actions. Existing
+  QR clicks and repeated popover use are preserved. Updated development
+  dependencies to pass the release security audit. No new permissions or data
+  collection were added.
+- Validation: Type checking, lint, all 32 tests, build, dependency audit, and CI
+  passed. Live Drive checks confirmed context-menu coverage, no global button
+  hiding, and repeated QR opening after closing overlays. Drive's sharing
+  content returned a service error; its loading and error dialogs still
+  appeared above the QR actions. Sharing permissions were not changed.
+
 ## Privacy declaration
 
 - Single purpose: add a local QR-code action to Drive items already marked as
