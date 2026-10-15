@@ -1,6 +1,6 @@
 {
   "name": "qrive",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Qrive — QR Links for Google Drive",
   "license": "MIT",
@@ -39,9 +39,9 @@
     "eslint": "9.32.0",
     "globals": "16.3.0",
     "jsdom": "26.1.0",
-    "sharp": "0.35.3",
+    "sharp": "0.35.5",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.38.0",
-    "vitest": "3.2.6"
+    "typescript-eslint": "8.71.2",
+    "vitest": "4.1.11"
   }
 }

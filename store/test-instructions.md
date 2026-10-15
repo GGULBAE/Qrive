@@ -20,6 +20,10 @@ consent, backend, or paid feature is required.
    pre-existing access policy.
 8. Confirm that Escape and an outside click close the popover and that keyboard
    focus returns to the QR button.
+9. Open a Drive file's context menu, submenu, or sharing dialog. Confirm that
+   the overlay covers any QR buttons beneath it, while buttons elsewhere stay
+   visible. Close the overlay and reopen the QR popover to confirm it still
+   works. Leave the item's sharing permissions unchanged during this check.
 
 Qrive never opens or changes the Google Drive sharing dialog. All QR generation
 is local. When no trusted Drive link or stable row item ID is available, Qrive

@@ -11,7 +11,7 @@ interface OpenOptions {
 
 const POPOVER_HOST_ATTRIBUTE = "data-qrive-popover-host";
 const RUNTIME_ATTRIBUTE = "data-qrive-runtime";
-const RUNTIME_REVISION = "portal-button-v8";
+const RUNTIME_REVISION = "portal-button-v10";
 
 function createElement<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
@@ -371,7 +371,7 @@ export class QrivePopover {
       }
       button.classList.remove("copied");
       // Restart the confirmation animation when users copy repeatedly.
-      void button.offsetWidth;
+      button.getBoundingClientRect();
       button.classList.add("copied");
       button.textContent = this.messages.copied;
       status.textContent = this.messages.copied;

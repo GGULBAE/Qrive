@@ -11,7 +11,7 @@ import { buttonStyles } from "./styles";
 
 const BUTTON_GAP = 4;
 const BUTTON_SIZE = 20;
-const RUNTIME_REVISION = "portal-button-v8";
+const RUNTIME_REVISION = "portal-button-v10";
 
 interface RowState {
   readonly button: HTMLButtonElement;
@@ -110,7 +110,8 @@ export class DriveRowController {
     host.style.pointerEvents = "auto";
     host.style.position = "fixed";
     host.style.width = `${BUTTON_SIZE}px`;
-    host.style.zIndex = "2147483646";
+    // Above Drive's file list (0), below its menus (8) and dialogs.
+    host.style.zIndex = "1";
     const shadow = host.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");

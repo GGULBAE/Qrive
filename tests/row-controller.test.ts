@@ -232,9 +232,9 @@ describe("DriveRowController", () => {
     expect(host.style.left).toBe("124px");
     expect(host.style.top).toBe("50px");
     expect(host.style.position).toBe("fixed");
-    expect(host.style.zIndex).toBe("2147483646");
+    expect(host.style.zIndex).toBe("1");
     expect(host.hidden).toBe(false);
-    expect(host.dataset.qriveRuntime).toBe("portal-button-v8");
+    expect(host.dataset.qriveRuntime).toBe("portal-button-v10");
   });
 
   it("keeps the portal outside Drive when Drive adds a nearby control", () => {

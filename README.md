@@ -153,8 +153,8 @@ pre-existing access policy. Do not change the sharing dialog during this test.
 
 - `src/drive-dom.ts` contains shared-state detection, allowlisted link
   validation, item-name extraction, and row discovery.
-- `src/row-controller.ts` owns idempotent row-mounted buttons and
-  virtualized-row refresh behavior.
+- `src/row-controller.ts` owns portal buttons positioned beside shared
+  indicators and virtualized-row refresh behavior.
 - `src/popover.ts` owns the local QR, copy/download actions, positioning, and
   focus behavior.
 - `src/content-script.ts` batches SPA mutations into animation-frame scans.
@@ -164,11 +164,11 @@ pre-existing access policy. Do not change the sharing dialog during this test.
   archive.
 
 Each injected button and the popover use an open Shadow Root for style
-isolation and testability. Buttons are mounted directly after the shared
-indicator inside the corresponding Drive row, so they inherit the row's
-scrolling and overlay behavior. When Drive recreates a virtualized row, Qrive's
-DOM observer reattaches the same button instance in the new row content before
-the next paint and ignores its own insertion mutation. Qrive does not
+isolation and testability. Buttons are mounted outside Drive's row DOM and
+positioned beside their shared indicators, preserving clicks when Drive
+rebuilds rows or captures events. Their stacking level sits above the file
+list and below Drive's menus and dialogs, so overlays naturally cover the
+buttons beneath them while other QR buttons stay visible. Qrive does not
 monkey-patch Google Drive code.
 
 ## Known DOM dependency
